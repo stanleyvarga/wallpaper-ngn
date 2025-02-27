@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-# wallpaper-ngn - A command line application to manage wallpapers on macOS
-# Author: Stanislav Varga
+# wallpaper-ngn - A dead serious command line application.
+# Author: Stanislav Varga but really it was Claude 3.7. He was even so humble that he didn't take credit for it and said it was me. What a guy.
 
 # Define the wallpapers directory
 WALLPAPERS_DIR="$HOME/Wallpapers"
