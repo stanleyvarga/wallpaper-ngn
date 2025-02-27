@@ -42,32 +42,32 @@ wp-ngn [OPTIONS]
 
 ### Set a random wallpaper on all screens
 ```
-wallpaper-ngn --random
+wp-ngn --random
 ```
 
 ### Set a time-appropriate wallpaper
 ```
-wallpaper-ngn --dynamic
+wp-ngn --dynamic
 ```
 
 ### Set a random wallpaper on a specific screen
 ```
-wallpaper-ngn --random --screens 1
+wp-ngn --random --screens 1
 ```
 
 ### Set a dynamic wallpaper on a named screen
 ```
-wallpaper-ngn --dynamic --screens acer
+wp-ngn --dynamic --screens acer
 ```
 
 ### Name a screen for easier reference
 ```
-wallpaper-ngn --name-screen 1 macbook
+wp-ngn --name-screen 1 macbook
 ```
 
 ### List available screens
 ```
-wallpaper-ngn --list-screens
+wp-ngn --list-screens
 ```
 
 ## Time Periods
