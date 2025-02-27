@@ -1,0 +1,246 @@
+#!/bin/zsh
+
+# wallpaper-ngn - A command line application to manage wallpapers on macOS
+# Author: Stanislav Varga
+
+# Define the wallpapers directory
+WALLPAPERS_DIR="$HOME/Wallpapers"
+
+# Define the config directory and file
+CONFIG_DIR="$HOME/.wallpaper-ngn"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+
+# Function to check if a command is available
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# Function to print the banner
+print_banner() {
+  if command_exists figlet && command_exists lolcat; then
+    figlet -f ansi_shadow "Wallpaper ngn" | lolcat --truecolor
+  else
+    echo "======================="
+    echo "    Wallpaper ngn"
+    echo "======================="
+    
+    if ! command_exists figlet; then
+      echo "TIP: Install figlet for a better banner (brew install figlet)"
+    fi
+    
+    if ! command_exists lolcat; then
+      echo "TIP: Install lolcat for colorized output (gem install lolcat)"
+    fi
+  fi
+  echo ""
+}
+
+# Ensure config directory exists
+if [ ! -d "$CONFIG_DIR" ]; then
+  mkdir -p "$CONFIG_DIR"
+fi
+
+# Ensure config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo '{"screen_names":{}}' > "$CONFIG_FILE"
+fi
+
+# Function to print usage information
+print_usage() {
+  echo "Usage: wallpaper-ngn [OPTIONS]"
+  echo "Options:"
+  echo "  --random                  Set a random wallpaper"
+  echo "  --screens <value>         Specify which screens to set (all, 1, 2, etc.)"
+  echo "  --list-screens            List all available screens"
+  echo "  --name-screen <id> <name> Set a custom name for a screen"
+  echo "  --help                    Show this help message"
+}
+
+# Function to get a random wallpaper from the directory structure
+get_random_wallpaper() {
+  # Create a temporary file to store the list of wallpapers
+  local tmp_file=$(mktemp)
+  
+  # Get all wallpaper files from subdirectories, excluding the "unused" directory
+  # Use a temp file to avoid issues with spaces in filenames
+  find "${WALLPAPERS_DIR}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) | grep -v "${WALLPAPERS_DIR}/unused" > "$tmp_file"
+  
+  # Count the number of lines (wallpapers)
+  local wallpaper_count=$(wc -l < "$tmp_file")
+  
+  # Check if any wallpapers were found
+  if [ $wallpaper_count -eq 0 ]; then
+    rm "$tmp_file"
+    echo "No wallpapers found in ${WALLPAPERS_DIR}"
+    exit 1
+  fi
+  
+  # Pick a random line number
+  local random_line=$((RANDOM % wallpaper_count + 1))
+  
+  # Get the wallpaper at that line
+  local wallpaper_path=$(sed -n "${random_line}p" "$tmp_file")
+  
+  # Clean up
+  rm "$tmp_file"
+  
+  echo "$wallpaper_path"
+}
+
+# Function to list all screens with their names
+list_screens() {
+  # Get screen names from config
+  local screen_names=$(cat "$CONFIG_FILE" | jq -r ".screen_names")
+  
+  # Get screens from wallpaper command
+  echo "Available screens:"
+  wallpaper screens | while IFS= read -r line; do
+    # Extract screen ID and name using string operations instead of regex
+    if [[ "$line" == *" - "* ]]; then
+      local screen_id="${line%% - *}"
+      local default_name="${line#*- }"
+      
+      # Try to get custom name
+      local custom_name=$(echo "$screen_names" | jq -r ".\"$screen_id\"")
+      
+      # If no custom name (or null), use default
+      if [[ -z "$custom_name" || "$custom_name" == "null" ]]; then
+        echo "$screen_id - $default_name"
+      else
+        echo "$screen_id - $custom_name"
+      fi
+    else
+      echo "$line"
+    fi
+  done
+}
+
+# Function to set a custom name for a screen
+name_screen() {
+  local screen_id="$1"
+  local screen_name="$2"
+  
+  # Read current config
+  local config=$(cat "$CONFIG_FILE")
+  
+  # Update screen name
+  config=$(echo "$config" | jq ".screen_names[\"$screen_id\"] = \"$screen_name\"")
+  
+  # Write back to config file
+  echo "$config" > "$CONFIG_FILE"
+  
+  echo "Screen $screen_id named as '$screen_name'"
+}
+
+# Function to translate screen name to screen ID if needed
+translate_screen_name() {
+  local screen_input="$1"
+  
+  # If input is "all" or a number, return as is
+  if [[ "$screen_input" == "all" || "$screen_input" == "main" || "$screen_input" =~ ^[0-9]+$ ]]; then
+    echo "$screen_input"
+    return
+  fi
+  
+  # Get screen names from config
+  local screen_names=$(cat "$CONFIG_FILE" | jq -r ".screen_names")
+  
+  # Loop through all screen IDs
+  for screen_id in $(echo "$screen_names" | jq -r 'keys[]'); do
+    # Get the name for this ID
+    local name=$(echo "$screen_names" | jq -r ".\"$screen_id\"")
+    
+    # If the name matches our input, return the ID
+    if [[ "$name" == "$screen_input" ]]; then
+      echo "$screen_id"
+      return
+    fi
+  done
+  
+  # If no match found, return the original input
+  # (this will likely cause an error, but that's expected for invalid inputs)
+  echo "$screen_input"
+}
+
+# Parse command line arguments
+screens="all"  # Default value
+random_mode=false
+list_screens_mode=false
+name_screen_mode=false
+screen_id=""
+screen_name=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --random)
+      random_mode=true
+      shift
+      ;;
+    --screens)
+      if [ "$2" ]; then
+        screens="$2"
+        shift 2
+      else
+        echo "Error: Missing value for --screens parameter"
+        print_usage
+        exit 1
+      fi
+      ;;
+    --list-screens)
+      list_screens_mode=true
+      shift
+      ;;
+    --name-screen)
+      if [ "$2" ] && [ "$3" ]; then
+        name_screen_mode=true
+        screen_id="$2"
+        screen_name="$3"
+        shift 3
+      else
+        echo "Error: Missing value for --name-screen parameter"
+        print_usage
+        exit 1
+      fi
+      ;;
+    --help)
+      print_banner
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown option $1"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+# Print the banner before executing any command
+print_banner
+
+# Handle the different modes
+if [ "$list_screens_mode" = true ]; then
+  list_screens
+  exit 0
+elif [ "$name_screen_mode" = true ]; then
+  name_screen "$screen_id" "$screen_name"
+  exit 0
+elif [ "$random_mode" = true ]; then
+  wallpaper_path=$(get_random_wallpaper)
+  echo "Setting random wallpaper: $wallpaper_path"
+  
+  # Translate screen name to ID if needed
+  screens=$(translate_screen_name "$screens")
+  
+  wallpaper set "$wallpaper_path" --screen $screens
+  if [ $? -eq 0 ]; then
+    echo "Wallpaper set successfully!"
+  else
+    echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
+    echo "You can install it with: brew install wallpaper"
+  fi
+else
+  echo "Please specify at least one action (e.g., --random, --list-screens, --name-screen)"
+  print_usage
+  exit 1
+fi
