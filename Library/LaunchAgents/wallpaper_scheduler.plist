@@ -6,7 +6,7 @@
     <string>com.wp-ngn.wallpaper_scheduler</string>
     <key>ProgramArguments</key>
     <array>
-        <string>~/.dotfiles/bin/wp-ngn.sh</string>
+        <string>~/bin/wp-ngn.sh</string>
     </array>
     
     <key>StartInterval</key>
