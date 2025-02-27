@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# wallpaper-ngn - A dead serious command line application.
+# wp-ngn - A dead serious command line application.
 # Author: Stanislav Varga but really it was Claude 3.7. He was even so humble that he didn't take credit for it and said it was me. What a guy.
 
 # Clear the console before any output - try multiple methods for better compatibility
@@ -50,7 +50,7 @@ fi
 
 # Function to print usage information
 print_usage() {
-  echo "Usage: wallpaper-ngn [OPTIONS]"
+  echo "Usage: wp-ngn [OPTIONS]"
   echo "Options:"
   echo "  --random                  Set a random wallpaper"
   echo "  --dynamic                 Set a wallpaper based on the time of day"
