@@ -1,8 +1,88 @@
-# Wallpaper NGN
+# Wallpaper eNGiNe 
 
 ![big brain](./big_brain.gif)
 
 This utility does a thing. That thing is changing your wallpaper. It can even do it without you asking, because it's just that helpful. Or maybe it's passive-aggressive. You decide. It's a command-line tool, so naturally, it's very serious business.
+
+## Directory Structure
+
+The script uses the following directory structure for wallpapers:
+
+```
+~/Wallpapers/
+├── dawn/
+├── sunrise/
+├── morning/
+├── afternoon/
+├── sunset/
+├── dusk/
+├── night/
+└── unused/  # Images in this folder are ignored
+```
+
+## Usage
+
+```
+wp-ngn [OPTIONS]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--random` | Set a random wallpaper from the entire collection |
+| `--dynamic` | Set a wallpaper based on the current time of day |
+| `--override` | Force wallpaper change even if current period wallpaper is already set |
+| `--screens <value>` | Specify which screens to set (all, 1, 2, etc., or custom names) |
+| `--list-screens` | List all available screens |
+| `--name-screen <id> <name>` | Set a custom name for a specific screen |
+| `--help` | Show help message |
+
+## Examples
+
+### Set a random wallpaper on all screens
+```
+wallpaper-ngn --random
+```
+
+### Set a time-appropriate wallpaper
+```
+wallpaper-ngn --dynamic
+```
+
+### Set a random wallpaper on a specific screen
+```
+wallpaper-ngn --random --screens 1
+```
+
+### Set a dynamic wallpaper on a named screen
+```
+wallpaper-ngn --dynamic --screens acer
+```
+
+### Name a screen for easier reference
+```
+wallpaper-ngn --name-screen 1 macbook
+```
+
+### List available screens
+```
+wallpaper-ngn --list-screens
+```
+
+## Time Periods
+
+The script defines the following time periods, which vary by month to account for seasonal changes in daylight:
+
+- **Dawn**: Early morning before sunrise
+- **Sunrise**: Period during sunrise
+- **Morning**: Morning hours
+- **Afternoon**: Afternoon hours
+- **Sunset**: Period during sunset
+- **Dusk**: Evening after sunset
+- **Night**: Nighttime hours
+
+Each month has its own specific time range definitions for these periods to match seasonal daylight patterns.
 
 ## License
 MIT 
