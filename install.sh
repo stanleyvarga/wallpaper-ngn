@@ -3,13 +3,6 @@
 # Exit on error
 set -e
 
-# Clone the repository
-git clone git@github.com:stanleyvarga/wallpaper-ngn.git ~/wallpaper-ngn
-
-# Copy the wp-ngn binary to the dotfiles bin directory
-cp ~/wallpaper-ngn/wp-ngn ~/.dotfiles/bin/bin/
-chmod +x ~/.dotfiles/bin/bin/wp-ngn
-
 echo "Installing LaunchAgent plist files..."
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
