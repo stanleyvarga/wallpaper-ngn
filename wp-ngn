@@ -3,13 +3,15 @@
 # wallpaper-ngn - A dead serious command line application.
 # Author: Stanislav Varga but really it was Claude 3.7. He was even so humble that he didn't take credit for it and said it was me. What a guy.
 
+# Clear the console before any output - try multiple methods for better compatibility
+clear 2>/dev/null || printf "\033c" || echo -e "\033[H\033[J]" || echo -e "\033[2J\033[1;1H"
+
 # Define the wallpapers directory
 WALLPAPERS_DIR="$HOME/Wallpapers"
 
 # Define the config directory and file
 CONFIG_DIR="$HOME/.wallpaper-ngn"
 CONFIG_FILE="$CONFIG_DIR/config.json"
-DAYTIME_CONFIG_FILE="$CONFIG_DIR/daytime_config.json"
 
 # Function to check if a command is available
 command_exists() {
@@ -46,158 +48,17 @@ if [ ! -f "$CONFIG_FILE" ]; then
   echo '{"screen_names":{}}' > "$CONFIG_FILE"
 fi
 
-# Ensure daytime config file exists with default values
-if [ ! -f "$DAYTIME_CONFIG_FILE" ]; then
-  # Create default daytime ranges for each month
-  # Format: {"month": {"dawn": {"start": "HH:MM", "end": "HH:MM"}, ...}}
-  cat > "$DAYTIME_CONFIG_FILE" << EOF
-{
-  "default": {
-    "night": {"start": "22:00", "end": "05:00"},
-    "dawn": {"start": "05:00", "end": "06:30"},
-    "sunrise": {"start": "06:30", "end": "08:00"},
-    "morning": {"start": "08:00", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "15:00"},
-    "afternoon": {"start": "15:00", "end": "17:30"},
-    "sunset": {"start": "17:30", "end": "19:00"},
-    "dusk": {"start": "19:00", "end": "22:00"}
-  },
-  "1": {
-    "night": {"start": "20:30", "end": "06:30"},
-    "dawn": {"start": "06:30", "end": "07:45"},
-    "sunrise": {"start": "07:45", "end": "09:00"},
-    "morning": {"start": "09:00", "end": "11:30"},
-    "noon": {"start": "11:30", "end": "14:00"},
-    "afternoon": {"start": "14:00", "end": "16:00"},
-    "sunset": {"start": "16:00", "end": "17:00"},
-    "dusk": {"start": "17:00", "end": "20:30"}
-  },
-  "2": {
-    "night": {"start": "21:00", "end": "06:15"},
-    "dawn": {"start": "06:15", "end": "07:30"},
-    "sunrise": {"start": "07:30", "end": "08:45"},
-    "morning": {"start": "08:45", "end": "11:30"},
-    "noon": {"start": "11:30", "end": "14:30"},
-    "afternoon": {"start": "14:30", "end": "16:30"},
-    "sunset": {"start": "16:30", "end": "17:30"},
-    "dusk": {"start": "17:30", "end": "21:00"}
-  },
-  "3": {
-    "night": {"start": "21:30", "end": "05:45"},
-    "dawn": {"start": "05:45", "end": "07:00"},
-    "sunrise": {"start": "07:00", "end": "08:30"},
-    "morning": {"start": "08:30", "end": "11:30"},
-    "noon": {"start": "11:30", "end": "15:00"},
-    "afternoon": {"start": "15:00", "end": "17:00"},
-    "sunset": {"start": "17:00", "end": "18:00"},
-    "dusk": {"start": "18:00", "end": "21:30"}
-  },
-  "4": {
-    "night": {"start": "22:00", "end": "05:15"},
-    "dawn": {"start": "05:15", "end": "06:30"},
-    "sunrise": {"start": "06:30", "end": "08:00"},
-    "morning": {"start": "08:00", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "15:00"},
-    "afternoon": {"start": "15:00", "end": "17:30"},
-    "sunset": {"start": "17:30", "end": "18:45"},
-    "dusk": {"start": "18:45", "end": "22:00"}
-  },
-  "5": {
-    "night": {"start": "22:30", "end": "04:45"},
-    "dawn": {"start": "04:45", "end": "06:00"},
-    "sunrise": {"start": "06:00", "end": "07:30"},
-    "morning": {"start": "07:30", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "15:30"},
-    "afternoon": {"start": "15:30", "end": "18:00"},
-    "sunset": {"start": "18:00", "end": "19:30"},
-    "dusk": {"start": "19:30", "end": "22:30"}
-  },
-  "6": {
-    "night": {"start": "22:30", "end": "04:30"},
-    "dawn": {"start": "04:30", "end": "05:30"},
-    "sunrise": {"start": "05:30", "end": "07:00"},
-    "morning": {"start": "07:00", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "16:00"},
-    "afternoon": {"start": "16:00", "end": "19:00"},
-    "sunset": {"start": "19:00", "end": "20:30"},
-    "dusk": {"start": "20:30", "end": "22:30"}
-  },
-  "7": {
-    "night": {"start": "22:30", "end": "04:45"},
-    "dawn": {"start": "04:45", "end": "05:45"},
-    "sunrise": {"start": "05:45", "end": "07:15"},
-    "morning": {"start": "07:15", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "16:00"},
-    "afternoon": {"start": "16:00", "end": "18:45"},
-    "sunset": {"start": "18:45", "end": "20:15"},
-    "dusk": {"start": "20:15", "end": "22:30"}
-  },
-  "8": {
-    "night": {"start": "22:00", "end": "05:15"},
-    "dawn": {"start": "05:15", "end": "06:15"},
-    "sunrise": {"start": "06:15", "end": "07:30"},
-    "morning": {"start": "07:30", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "15:30"},
-    "afternoon": {"start": "15:30", "end": "18:15"},
-    "sunset": {"start": "18:15", "end": "19:30"},
-    "dusk": {"start": "19:30", "end": "22:00"}
-  },
-  "9": {
-    "night": {"start": "21:30", "end": "05:45"},
-    "dawn": {"start": "05:45", "end": "06:45"},
-    "sunrise": {"start": "06:45", "end": "08:00"},
-    "morning": {"start": "08:00", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "15:00"},
-    "afternoon": {"start": "15:00", "end": "17:45"},
-    "sunset": {"start": "17:45", "end": "18:45"},
-    "dusk": {"start": "18:45", "end": "21:30"}
-  },
-  "10": {
-    "night": {"start": "21:00", "end": "06:15"},
-    "dawn": {"start": "06:15", "end": "07:15"},
-    "sunrise": {"start": "07:15", "end": "08:30"},
-    "morning": {"start": "08:30", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "14:30"},
-    "afternoon": {"start": "14:30", "end": "17:00"},
-    "sunset": {"start": "17:00", "end": "18:00"},
-    "dusk": {"start": "18:00", "end": "21:00"}
-  },
-  "11": {
-    "night": {"start": "20:30", "end": "06:30"},
-    "dawn": {"start": "06:30", "end": "07:30"},
-    "sunrise": {"start": "07:30", "end": "08:45"},
-    "morning": {"start": "08:45", "end": "11:15"},
-    "noon": {"start": "11:15", "end": "14:15"},
-    "afternoon": {"start": "14:15", "end": "16:30"},
-    "sunset": {"start": "16:30", "end": "17:30"},
-    "dusk": {"start": "17:30", "end": "20:30"}
-  },
-  "12": {
-    "night": {"start": "21:00", "end": "06:00"},
-    "dawn": {"start": "06:00", "end": "07:30"},
-    "sunrise": {"start": "07:30", "end": "09:00"},
-    "morning": {"start": "09:00", "end": "11:00"},
-    "noon": {"start": "11:00", "end": "14:00"},
-    "afternoon": {"start": "14:00", "end": "16:00"},
-    "sunset": {"start": "16:00", "end": "17:00"},
-    "dusk": {"start": "17:00", "end": "21:00"}
-  }
-}
-EOF
-  echo "Created default daytime configuration. You can edit it at $DAYTIME_CONFIG_FILE"
-fi
-
 # Function to print usage information
 print_usage() {
   echo "Usage: wallpaper-ngn [OPTIONS]"
   echo "Options:"
   echo "  --random                  Set a random wallpaper"
   echo "  --dynamic                 Set a wallpaper based on the time of day"
+  echo "  --override                Force wallpaper change even if current period wallpaper is already set"
   echo "  --screens <value>         Specify which screens to set (all, 1, 2, etc.)"
   echo "  --list-screens            List all available screens"
   echo "  --name-screen <id> <name> Set a custom name for a screen"
   echo "  --help                    Show this help message"
-  echo "  --edit-daytime-config     Open the daytime configuration file in your default editor"
 }
 
 # Function to get the current daytime period based on time and month
@@ -206,14 +67,168 @@ get_current_daytime() {
   local current_month=$(date +"%m" | sed 's/^0//')  # Remove leading zero
   local current_time=$(date +"%H:%M")
   
-  # Load daytime configuration
-  local daytime_config=$(cat "$DAYTIME_CONFIG_FILE")
+  # Define daytime periods directly in the function
+  local month_config=""
   
-  # Try to get month-specific config, fallback to default
-  local month_config=$(echo "$daytime_config" | jq -r ".\"$current_month\"")
-  if [[ "$month_config" == "null" ]]; then
-    month_config=$(echo "$daytime_config" | jq -r ".default")
-  fi
+  # Select configuration based on month
+  case "$current_month" in
+    1)
+      # January
+      month_config='{
+        "night": {"start": "20:30", "end": "06:30"},
+        "dawn": {"start": "06:30", "end": "07:45"},
+        "sunrise": {"start": "07:45", "end": "09:00"},
+        "morning": {"start": "09:00", "end": "11:30"},
+        "afternoon": {"start": "11:30", "end": "16:00"},
+        "sunset": {"start": "16:00", "end": "17:00"},
+        "dusk": {"start": "17:00", "end": "20:30"}
+      }'
+      ;;
+    2)
+      # February
+      month_config='{
+        "night": {"start": "19:00", "end": "06:15"},
+        "dawn": {"start": "06:15", "end": "07:30"},
+        "sunrise": {"start": "07:30", "end": "08:45"},
+        "morning": {"start": "08:45", "end": "11:30"},
+        "afternoon": {"start": "11:30", "end": "16:30"},
+        "sunset": {"start": "16:30", "end": "17:30"},
+        "dusk": {"start": "17:30", "end": "19:00"}
+      }'
+      ;;
+    3)
+      # March
+      month_config='{
+        "night": {"start": "21:30", "end": "05:45"},
+        "dawn": {"start": "05:45", "end": "07:00"},
+        "sunrise": {"start": "07:00", "end": "08:30"},
+        "morning": {"start": "08:30", "end": "11:30"},
+        "afternoon": {"start": "11:30", "end": "17:00"},
+        "sunset": {"start": "17:00", "end": "18:00"},
+        "dusk": {"start": "18:00", "end": "21:30"}
+      }'
+      ;;
+    4)
+      # April
+      month_config='{
+        "night": {"start": "22:00", "end": "05:15"},
+        "dawn": {"start": "05:15", "end": "06:30"},
+        "sunrise": {"start": "06:30", "end": "08:00"},
+        "morning": {"start": "08:00", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "17:30"},
+        "sunset": {"start": "17:30", "end": "18:45"},
+        "dusk": {"start": "18:45", "end": "22:00"}
+      }'
+      ;;
+    5)
+      # May
+      month_config='{
+        "night": {"start": "22:30", "end": "04:45"},
+        "dawn": {"start": "04:45", "end": "06:00"},
+        "sunrise": {"start": "06:00", "end": "07:30"},
+        "morning": {"start": "07:30", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "18:00"},
+        "sunset": {"start": "18:00", "end": "19:30"},
+        "dusk": {"start": "19:30", "end": "22:30"}
+      }'
+      ;;
+    6)
+      # June
+      month_config='{
+        "night": {"start": "22:30", "end": "04:30"},
+        "dawn": {"start": "04:30", "end": "05:30"},
+        "sunrise": {"start": "05:30", "end": "07:00"},
+        "morning": {"start": "07:00", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "19:00"},
+        "sunset": {"start": "19:00", "end": "20:30"},
+        "dusk": {"start": "20:30", "end": "22:30"}
+      }'
+      ;;
+    7)
+      # July
+      month_config='{
+        "night": {"start": "22:30", "end": "04:45"},
+        "dawn": {"start": "04:45", "end": "05:45"},
+        "sunrise": {"start": "05:45", "end": "07:15"},
+        "morning": {"start": "07:15", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "18:45"},
+        "sunset": {"start": "18:45", "end": "20:15"},
+        "dusk": {"start": "20:15", "end": "22:30"}
+      }'
+      ;;
+    8)
+      # August
+      month_config='{
+        "night": {"start": "22:00", "end": "05:15"},
+        "dawn": {"start": "05:15", "end": "06:15"},
+        "sunrise": {"start": "06:15", "end": "07:30"},
+        "morning": {"start": "07:30", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "18:15"},
+        "sunset": {"start": "18:15", "end": "19:30"},
+        "dusk": {"start": "19:30", "end": "22:00"}
+      }'
+      ;;
+    9)
+      # September
+      month_config='{
+        "night": {"start": "21:30", "end": "05:45"},
+        "dawn": {"start": "05:45", "end": "06:45"},
+        "sunrise": {"start": "06:45", "end": "08:00"},
+        "morning": {"start": "08:00", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "17:45"},
+        "sunset": {"start": "17:45", "end": "18:45"},
+        "dusk": {"start": "18:45", "end": "21:30"}
+      }'
+      ;;
+    10)
+      # October
+      month_config='{
+        "night": {"start": "21:00", "end": "06:15"},
+        "dawn": {"start": "06:15", "end": "07:15"},
+        "sunrise": {"start": "07:15", "end": "08:30"},
+        "morning": {"start": "08:30", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "17:00"},
+        "sunset": {"start": "17:00", "end": "18:00"},
+        "dusk": {"start": "18:00", "end": "21:00"}
+      }'
+      ;;
+    11)
+      # November
+      month_config='{
+        "night": {"start": "20:30", "end": "06:30"},
+        "dawn": {"start": "06:30", "end": "07:30"},
+        "sunrise": {"start": "07:30", "end": "08:45"},
+        "morning": {"start": "08:45", "end": "11:15"},
+        "afternoon": {"start": "11:15", "end": "16:30"},
+        "sunset": {"start": "16:30", "end": "17:30"},
+        "dusk": {"start": "17:30", "end": "20:30"}
+      }'
+      ;;
+    12)
+      # December
+      month_config='{
+        "night": {"start": "21:00", "end": "06:00"},
+        "dawn": {"start": "06:00", "end": "07:30"},
+        "sunrise": {"start": "07:30", "end": "09:00"},
+        "morning": {"start": "09:00", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "16:00"},
+        "sunset": {"start": "16:00", "end": "17:00"},
+        "dusk": {"start": "17:00", "end": "21:00"}
+      }'
+      ;;
+    *)
+      # Default fallback
+      month_config='{
+        "night": {"start": "22:00", "end": "05:00"},
+        "dawn": {"start": "05:00", "end": "06:30"},
+        "sunrise": {"start": "06:30", "end": "08:00"},
+        "morning": {"start": "08:00", "end": "11:00"},
+        "afternoon": {"start": "11:00", "end": "17:30"},
+        "sunset": {"start": "17:30", "end": "19:00"},
+        "dusk": {"start": "19:00", "end": "22:00"}
+      }'
+      ;;
+  esac
   
   # Convert current time to minutes since midnight for easier comparison
   local current_hour=${current_time%:*}
@@ -251,20 +266,7 @@ get_current_daytime() {
   done
   
   # Fallback to a default if no match is found
-  echo "noon"
-}
-
-# Function to edit daytime configuration
-edit_daytime_config() {
-  if [[ -n "$EDITOR" ]]; then
-    $EDITOR "$DAYTIME_CONFIG_FILE"
-  elif command_exists nano; then
-    nano "$DAYTIME_CONFIG_FILE"
-  elif command_exists vim; then
-    vim "$DAYTIME_CONFIG_FILE"
-  else
-    echo "No editor found. Please edit the file manually: $DAYTIME_CONFIG_FILE"
-  fi
+  echo "afternoon"
 }
 
 # Function to get a random wallpaper from the directory structure
@@ -393,13 +395,36 @@ translate_screen_name() {
   echo "$screen_input"
 }
 
+# Function to check if current wallpapers match the daytime period
+is_current_daytime_wallpaper_set() {
+  local current_daytime="$1"
+  local wallpaper_output=$(wallpaper get)
+  local all_match="true"
+  
+  # Use process substitution to read the output line by line
+  while IFS= read -r wallpaper_path; do
+    # Skip empty lines
+    if [[ -z "$wallpaper_path" ]]; then
+      continue
+    fi
+    
+    # Check if the path contains the current daytime as a directory name
+    if [[ "$wallpaper_path" != *"/$current_daytime/"* ]]; then
+      all_match="false"
+      break
+    fi
+  done < <(echo "$wallpaper_output")
+  
+  echo "$all_match"
+}
+
 # Parse command line arguments
 screens="all"  # Default value
 random_mode=false
 dynamic_mode=false
+override_time=false
 list_screens_mode=false
 name_screen_mode=false
-edit_config_mode=false
 screen_id=""
 screen_name=""
 
@@ -411,6 +436,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dynamic)
       dynamic_mode=true
+      shift
+      ;;
+    --override)
+      override_time=true
       shift
       ;;
     --screens)
@@ -439,10 +468,6 @@ while [ "$#" -gt 0 ]; do
         exit 1
       fi
       ;;
-    --edit-daytime-config)
-      edit_config_mode=true
-      shift
-      ;;
     --help)
       print_banner
       print_usage
@@ -466,9 +491,6 @@ if [ "$list_screens_mode" = true ]; then
 elif [ "$name_screen_mode" = true ]; then
   name_screen "$screen_id" "$screen_name"
   exit 0
-elif [ "$edit_config_mode" = true ]; then
-  edit_daytime_config
-  exit 0
 elif [ "$random_mode" = true ]; then
   wallpaper_path=$(get_random_wallpaper "")
   echo "Setting random wallpaper: $wallpaper_path"
@@ -487,6 +509,15 @@ elif [ "$dynamic_mode" = true ]; then
   # Get current daytime period
   current_daytime=$(get_current_daytime)
   echo "Current time of day: $current_daytime"
+  
+  # Check if wallpaper for current daytime is already set
+  if [[ "$override_time" = false ]]; then
+    current_wallpaper_check=$(is_current_daytime_wallpaper_set "$current_daytime")
+    if [[ "$current_wallpaper_check" == "true" ]]; then
+      echo "Wallpaper for $current_daytime already set. Use --override to force change."
+      exit 0
+    fi
+  fi
   
   # Get wallpaper from the appropriate subfolder
   wallpaper_path=$(get_random_wallpaper "$current_daytime")
