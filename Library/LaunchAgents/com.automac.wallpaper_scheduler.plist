@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.wp-ngn.wallpaper_scheduler</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>~/.dotfiles/bin/wp-ngn.sh</string>
+    </array>
+    
+    <key>StartInterval</key>
+    <integer>300</integer>
+
+    <key>StandardOutPath</key>
+    <string>~/wallpaper-ngn/logs/wallpaper_scheduler.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>~/wallpaper-ngn/logs/wallpaper_scheduler_error.log</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+	<true/>
+</dict>
+</plist>
