@@ -6,7 +6,6 @@ This utility does a thing. That thing is changing your wallpaper. It can even do
 
 
 >The Bureaucratic Intergalactic Wallpaper Service, in accordance with Directive 742-Omega, Sub-Section Theta-9, defines this application as follows: Official wallpaper management tool for Earth-sized planets within habitable zones. (As determined by the Galactic Standard Habitable Zone Committee, Subsection 42, Paragraph 7b, Clause 3, Appendix Gamma-7.) Seasonal changes are calibrated to the planet's unique rotational wobble and the local space slug migration patterns. Please file Form 789-B if your wallpaper does not reflect the correct 'cosmic ambiance.'"
-```
 
 ## Directory Structure
 
