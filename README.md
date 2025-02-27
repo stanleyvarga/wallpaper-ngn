@@ -75,7 +75,6 @@ wp-ngn --list-screens
 ## Time Periods
 
 The script defines the following time periods, which vary by month to account for seasonal changes in daylight:
-Note: Current settings are set for earth-sized planet in habitable zones. 
 
 - **Dawn**: Early morning before sunrise
 - **Sunrise**: Period during sunrise
