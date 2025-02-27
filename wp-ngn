@@ -9,6 +9,7 @@ WALLPAPERS_DIR="$HOME/Wallpapers"
 # Define the config directory and file
 CONFIG_DIR="$HOME/.wallpaper-ngn"
 CONFIG_FILE="$CONFIG_DIR/config.json"
+DAYTIME_CONFIG_FILE="$CONFIG_DIR/daytime_config.json"
 
 # Function to check if a command is available
 command_exists() {
@@ -45,34 +46,264 @@ if [ ! -f "$CONFIG_FILE" ]; then
   echo '{"screen_names":{}}' > "$CONFIG_FILE"
 fi
 
+# Ensure daytime config file exists with default values
+if [ ! -f "$DAYTIME_CONFIG_FILE" ]; then
+  # Create default daytime ranges for each month
+  # Format: {"month": {"dawn": {"start": "HH:MM", "end": "HH:MM"}, ...}}
+  cat > "$DAYTIME_CONFIG_FILE" << EOF
+{
+  "default": {
+    "night": {"start": "22:00", "end": "05:00"},
+    "dawn": {"start": "05:00", "end": "06:30"},
+    "sunrise": {"start": "06:30", "end": "08:00"},
+    "morning": {"start": "08:00", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "15:00"},
+    "afternoon": {"start": "15:00", "end": "17:30"},
+    "sunset": {"start": "17:30", "end": "19:00"},
+    "dusk": {"start": "19:00", "end": "22:00"}
+  },
+  "1": {
+    "night": {"start": "20:30", "end": "06:30"},
+    "dawn": {"start": "06:30", "end": "07:45"},
+    "sunrise": {"start": "07:45", "end": "09:00"},
+    "morning": {"start": "09:00", "end": "11:30"},
+    "noon": {"start": "11:30", "end": "14:00"},
+    "afternoon": {"start": "14:00", "end": "16:00"},
+    "sunset": {"start": "16:00", "end": "17:00"},
+    "dusk": {"start": "17:00", "end": "20:30"}
+  },
+  "2": {
+    "night": {"start": "21:00", "end": "06:15"},
+    "dawn": {"start": "06:15", "end": "07:30"},
+    "sunrise": {"start": "07:30", "end": "08:45"},
+    "morning": {"start": "08:45", "end": "11:30"},
+    "noon": {"start": "11:30", "end": "14:30"},
+    "afternoon": {"start": "14:30", "end": "16:30"},
+    "sunset": {"start": "16:30", "end": "17:30"},
+    "dusk": {"start": "17:30", "end": "21:00"}
+  },
+  "3": {
+    "night": {"start": "21:30", "end": "05:45"},
+    "dawn": {"start": "05:45", "end": "07:00"},
+    "sunrise": {"start": "07:00", "end": "08:30"},
+    "morning": {"start": "08:30", "end": "11:30"},
+    "noon": {"start": "11:30", "end": "15:00"},
+    "afternoon": {"start": "15:00", "end": "17:00"},
+    "sunset": {"start": "17:00", "end": "18:00"},
+    "dusk": {"start": "18:00", "end": "21:30"}
+  },
+  "4": {
+    "night": {"start": "22:00", "end": "05:15"},
+    "dawn": {"start": "05:15", "end": "06:30"},
+    "sunrise": {"start": "06:30", "end": "08:00"},
+    "morning": {"start": "08:00", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "15:00"},
+    "afternoon": {"start": "15:00", "end": "17:30"},
+    "sunset": {"start": "17:30", "end": "18:45"},
+    "dusk": {"start": "18:45", "end": "22:00"}
+  },
+  "5": {
+    "night": {"start": "22:30", "end": "04:45"},
+    "dawn": {"start": "04:45", "end": "06:00"},
+    "sunrise": {"start": "06:00", "end": "07:30"},
+    "morning": {"start": "07:30", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "15:30"},
+    "afternoon": {"start": "15:30", "end": "18:00"},
+    "sunset": {"start": "18:00", "end": "19:30"},
+    "dusk": {"start": "19:30", "end": "22:30"}
+  },
+  "6": {
+    "night": {"start": "22:30", "end": "04:30"},
+    "dawn": {"start": "04:30", "end": "05:30"},
+    "sunrise": {"start": "05:30", "end": "07:00"},
+    "morning": {"start": "07:00", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "16:00"},
+    "afternoon": {"start": "16:00", "end": "19:00"},
+    "sunset": {"start": "19:00", "end": "20:30"},
+    "dusk": {"start": "20:30", "end": "22:30"}
+  },
+  "7": {
+    "night": {"start": "22:30", "end": "04:45"},
+    "dawn": {"start": "04:45", "end": "05:45"},
+    "sunrise": {"start": "05:45", "end": "07:15"},
+    "morning": {"start": "07:15", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "16:00"},
+    "afternoon": {"start": "16:00", "end": "18:45"},
+    "sunset": {"start": "18:45", "end": "20:15"},
+    "dusk": {"start": "20:15", "end": "22:30"}
+  },
+  "8": {
+    "night": {"start": "22:00", "end": "05:15"},
+    "dawn": {"start": "05:15", "end": "06:15"},
+    "sunrise": {"start": "06:15", "end": "07:30"},
+    "morning": {"start": "07:30", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "15:30"},
+    "afternoon": {"start": "15:30", "end": "18:15"},
+    "sunset": {"start": "18:15", "end": "19:30"},
+    "dusk": {"start": "19:30", "end": "22:00"}
+  },
+  "9": {
+    "night": {"start": "21:30", "end": "05:45"},
+    "dawn": {"start": "05:45", "end": "06:45"},
+    "sunrise": {"start": "06:45", "end": "08:00"},
+    "morning": {"start": "08:00", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "15:00"},
+    "afternoon": {"start": "15:00", "end": "17:45"},
+    "sunset": {"start": "17:45", "end": "18:45"},
+    "dusk": {"start": "18:45", "end": "21:30"}
+  },
+  "10": {
+    "night": {"start": "21:00", "end": "06:15"},
+    "dawn": {"start": "06:15", "end": "07:15"},
+    "sunrise": {"start": "07:15", "end": "08:30"},
+    "morning": {"start": "08:30", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "14:30"},
+    "afternoon": {"start": "14:30", "end": "17:00"},
+    "sunset": {"start": "17:00", "end": "18:00"},
+    "dusk": {"start": "18:00", "end": "21:00"}
+  },
+  "11": {
+    "night": {"start": "20:30", "end": "06:30"},
+    "dawn": {"start": "06:30", "end": "07:30"},
+    "sunrise": {"start": "07:30", "end": "08:45"},
+    "morning": {"start": "08:45", "end": "11:15"},
+    "noon": {"start": "11:15", "end": "14:15"},
+    "afternoon": {"start": "14:15", "end": "16:30"},
+    "sunset": {"start": "16:30", "end": "17:30"},
+    "dusk": {"start": "17:30", "end": "20:30"}
+  },
+  "12": {
+    "night": {"start": "21:00", "end": "06:00"},
+    "dawn": {"start": "06:00", "end": "07:30"},
+    "sunrise": {"start": "07:30", "end": "09:00"},
+    "morning": {"start": "09:00", "end": "11:00"},
+    "noon": {"start": "11:00", "end": "14:00"},
+    "afternoon": {"start": "14:00", "end": "16:00"},
+    "sunset": {"start": "16:00", "end": "17:00"},
+    "dusk": {"start": "17:00", "end": "21:00"}
+  }
+}
+EOF
+  echo "Created default daytime configuration. You can edit it at $DAYTIME_CONFIG_FILE"
+fi
+
 # Function to print usage information
 print_usage() {
   echo "Usage: wallpaper-ngn [OPTIONS]"
   echo "Options:"
   echo "  --random                  Set a random wallpaper"
+  echo "  --dynamic                 Set a wallpaper based on the time of day"
   echo "  --screens <value>         Specify which screens to set (all, 1, 2, etc.)"
   echo "  --list-screens            List all available screens"
   echo "  --name-screen <id> <name> Set a custom name for a screen"
   echo "  --help                    Show this help message"
+  echo "  --edit-daytime-config     Open the daytime configuration file in your default editor"
+}
+
+# Function to get the current daytime period based on time and month
+get_current_daytime() {
+  # Get current month and time
+  local current_month=$(date +"%m" | sed 's/^0//')  # Remove leading zero
+  local current_time=$(date +"%H:%M")
+  
+  # Load daytime configuration
+  local daytime_config=$(cat "$DAYTIME_CONFIG_FILE")
+  
+  # Try to get month-specific config, fallback to default
+  local month_config=$(echo "$daytime_config" | jq -r ".\"$current_month\"")
+  if [[ "$month_config" == "null" ]]; then
+    month_config=$(echo "$daytime_config" | jq -r ".default")
+  fi
+  
+  # Convert current time to minutes since midnight for easier comparison
+  local current_hour=${current_time%:*}
+  local current_minute=${current_time#*:}
+  local current_minutes=$((10#$current_hour * 60 + 10#$current_minute))
+  
+  # Check each daytime period
+  for period in $(echo "$month_config" | jq -r 'keys[]'); do
+    local start_time=$(echo "$month_config" | jq -r ".\"$period\".start")
+    local end_time=$(echo "$month_config" | jq -r ".\"$period\".end")
+    
+    # Convert times to minutes
+    local start_hour=${start_time%:*}
+    local start_minute=${start_time#*:}
+    local start_minutes=$((10#$start_hour * 60 + 10#$start_minute))
+    
+    local end_hour=${end_time%:*}
+    local end_minute=${end_time#*:}
+    local end_minutes=$((10#$end_hour * 60 + 10#$end_minute))
+    
+    # Handle overnight periods (e.g., night spanning from 22:00 to 05:00)
+    if [[ $start_minutes -gt $end_minutes ]]; then
+      # Period crosses midnight
+      if [[ $current_minutes -ge $start_minutes || $current_minutes -lt $end_minutes ]]; then
+        echo "$period"
+        return
+      fi
+    else
+      # Normal period within the same day
+      if [[ $current_minutes -ge $start_minutes && $current_minutes -lt $end_minutes ]]; then
+        echo "$period"
+        return
+      fi
+    fi
+  done
+  
+  # Fallback to a default if no match is found
+  echo "noon"
+}
+
+# Function to edit daytime configuration
+edit_daytime_config() {
+  if [[ -n "$EDITOR" ]]; then
+    $EDITOR "$DAYTIME_CONFIG_FILE"
+  elif command_exists nano; then
+    nano "$DAYTIME_CONFIG_FILE"
+  elif command_exists vim; then
+    vim "$DAYTIME_CONFIG_FILE"
+  else
+    echo "No editor found. Please edit the file manually: $DAYTIME_CONFIG_FILE"
+  fi
 }
 
 # Function to get a random wallpaper from the directory structure
 get_random_wallpaper() {
+  local subfolder="$1"
   # Create a temporary file to store the list of wallpapers
   local tmp_file=$(mktemp)
   
-  # Get all wallpaper files from subdirectories, excluding the "unused" directory
-  # Use a temp file to avoid issues with spaces in filenames
-  find "${WALLPAPERS_DIR}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) | grep -v "${WALLPAPERS_DIR}/unused" > "$tmp_file"
+  # Define the search path
+  local search_path="${WALLPAPERS_DIR}"
+  if [[ -n "$subfolder" ]]; then
+    search_path="${WALLPAPERS_DIR}/${subfolder}"
+    # Check if the subfolder exists
+    if [[ ! -d "$search_path" ]]; then
+      echo "Warning: Subfolder $subfolder does not exist in $WALLPAPERS_DIR"
+      # Fallback to main directory
+      search_path="${WALLPAPERS_DIR}"
+    fi
+  fi
+  
+  # Get all wallpaper files from the specified path, excluding the "unused" directory
+  find "${search_path}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) | grep -v "${WALLPAPERS_DIR}/unused" > "$tmp_file"
   
   # Count the number of lines (wallpapers)
   local wallpaper_count=$(wc -l < "$tmp_file")
   
   # Check if any wallpapers were found
   if [ $wallpaper_count -eq 0 ]; then
-    rm "$tmp_file"
-    echo "No wallpapers found in ${WALLPAPERS_DIR}"
-    exit 1
+    # If no wallpapers found in subfolder, try the main directory
+    if [[ -n "$subfolder" ]]; then
+      echo "No wallpapers found in ${search_path}, falling back to main directory"
+      rm "$tmp_file"
+      get_random_wallpaper ""
+      return
+    else
+      rm "$tmp_file"
+      echo "No wallpapers found in ${WALLPAPERS_DIR}"
+      exit 1
+    fi
   fi
   
   # Pick a random line number
@@ -165,8 +396,10 @@ translate_screen_name() {
 # Parse command line arguments
 screens="all"  # Default value
 random_mode=false
+dynamic_mode=false
 list_screens_mode=false
 name_screen_mode=false
+edit_config_mode=false
 screen_id=""
 screen_name=""
 
@@ -174,6 +407,10 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --random)
       random_mode=true
+      shift
+      ;;
+    --dynamic)
+      dynamic_mode=true
       shift
       ;;
     --screens)
@@ -202,6 +439,10 @@ while [ "$#" -gt 0 ]; do
         exit 1
       fi
       ;;
+    --edit-daytime-config)
+      edit_config_mode=true
+      shift
+      ;;
     --help)
       print_banner
       print_usage
@@ -225,8 +466,11 @@ if [ "$list_screens_mode" = true ]; then
 elif [ "$name_screen_mode" = true ]; then
   name_screen "$screen_id" "$screen_name"
   exit 0
+elif [ "$edit_config_mode" = true ]; then
+  edit_daytime_config
+  exit 0
 elif [ "$random_mode" = true ]; then
-  wallpaper_path=$(get_random_wallpaper)
+  wallpaper_path=$(get_random_wallpaper "")
   echo "Setting random wallpaper: $wallpaper_path"
   
   # Translate screen name to ID if needed
@@ -239,8 +483,27 @@ elif [ "$random_mode" = true ]; then
     echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
     echo "You can install it with: brew install wallpaper"
   fi
+elif [ "$dynamic_mode" = true ]; then
+  # Get current daytime period
+  current_daytime=$(get_current_daytime)
+  echo "Current time of day: $current_daytime"
+  
+  # Get wallpaper from the appropriate subfolder
+  wallpaper_path=$(get_random_wallpaper "$current_daytime")
+  echo "Setting $current_daytime wallpaper: $wallpaper_path"
+  
+  # Translate screen name to ID if needed
+  screens=$(translate_screen_name "$screens")
+  
+  wallpaper set "$wallpaper_path" --screen $screens
+  if [ $? -eq 0 ]; then
+    echo "Wallpaper set successfully!"
+  else
+    echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
+    echo "You can install it with: brew install wallpaper"
+  fi
 else
-  echo "Please specify at least one action (e.g., --random, --list-screens, --name-screen)"
+  echo "Please specify at least one action (e.g., --random, --dynamic, --list-screens, --name-screen)"
   print_usage
   exit 1
 fi
