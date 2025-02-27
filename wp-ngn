@@ -21,7 +21,7 @@ command_exists() {
 # Function to print the banner
 print_banner() {
   if command_exists figlet && command_exists lolcat; then
-    figlet -f ansi_shadow "Wallpaper ngn" | lolcat --truecolor
+    figlet -c -w 110 -f ansi_shadow "Wallpaper ngn" | lolcat --truecolor
   else
     echo "======================="
     echo "    Wallpaper ngn"
