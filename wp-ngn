@@ -3,6 +3,8 @@
 # wp-ngn - A dead serious command line application.
 # Author: Stanislav Varga but really it was Claude 3.7. He was even so humble that he didn't take credit for it and said it was me. What a guy.
 
+source ~/.zshrc
+
 # Clear the console before any output - try multiple methods for better compatibility
 clear 2>/dev/null || printf "\033c" || echo -e "\033[H\033[J]" || echo -e "\033[2J\033[1;1H"
 
