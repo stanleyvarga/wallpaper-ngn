@@ -12,8 +12,8 @@
 	</dict>
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/zsh</string>
-        <string>~/bin/wp-ngn.sh</string>
+        <string>/bin/sh</string>
+        <string>/Users/stanislavvarga/.dotfiles/bin/bin/wp-ngn.sh</string>
         <string>--dynamic</string>
         <string>--override</string>
     </array>
