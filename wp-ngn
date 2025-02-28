@@ -58,6 +58,7 @@ print_usage() {
   echo "  --screens <value>         Specify which screens to set (all, 1, 2, etc.)"
   echo "  --list-screens            List all available screens"
   echo "  --name-screen <id> <name> Set a custom name for a screen"
+  echo "  --sync-screens            Make all screens match the wallpaper time period of screen 0"
   echo "  --help                    Show this help message"
 }
 
@@ -452,6 +453,92 @@ is_current_daytime_wallpaper_set() {
   echo "{\"all_match\":\"$all_match\",\"all_same\":\"$all_same\",\"screens_info\":\"$screens_info\",\"first_matching_wallpaper\":\"$first_matching_wallpaper\"}"
 }
 
+# Function to extract the daytime period from a wallpaper path
+extract_daytime_from_path() {
+  local path="$1"
+  local daytime_periods=("night" "dawn" "sunrise" "morning" "afternoon" "sunset" "dusk")
+  
+  for period in "${daytime_periods[@]}"; do
+    if [[ "$path" == *"/$period/"* ]]; then
+      echo "$period"
+      return
+    fi
+  done
+  
+  # If no match is found, return empty string
+  echo ""
+}
+
+# Function to sync wallpapers between screens
+sync_screens() {
+  echo "Checking if screens have matching wallpaper time periods..."
+  
+  # Get current wallpapers for all screens
+  local wallpaper_output=$(wallpaper get)
+  local wallpapers=()
+  local periods=()
+  local i=1  # Start from 1 (zsh arrays are 1-indexed by default)
+  
+  # Parse wallpaper paths and extract time periods
+  while IFS= read -r wallpaper_path; do
+    # Skip empty lines
+    if [[ -z "$wallpaper_path" ]]; then
+      continue
+    fi
+    
+    wallpapers[$i]="$wallpaper_path"
+    periods[$i]=$(extract_daytime_from_path "$wallpaper_path")
+    i=$((i+1))
+  done < <(echo "$wallpaper_output")
+  
+  # Check if we have at least two screens
+  if [[ ${#wallpapers[@]} -lt 2 ]]; then
+    echo "Only one screen detected. No syncing needed."
+    return
+  fi
+  
+  # Get the wallpaper and time period of the first screen (screen 0 - which is array index 1)
+  local main_wallpaper="${wallpapers[1]}"
+  local main_period="${periods[1]}"
+  
+  if [[ -z "$main_period" ]]; then
+    echo "Could not determine the time period of the wallpaper on screen 0."
+    return
+  fi
+  
+  echo "Screen 0 is using wallpaper: $main_wallpaper"
+  
+  # Check each screen and sync if needed
+  local any_synced=false
+  
+  # Start from index 2 (which is screen 1) since zsh arrays are 1-indexed
+  for ((i=2; i<=${#wallpapers[@]}; i++)); do
+    # Calculate actual screen number (i-1 is the screen number, since arrays start at 1)
+    local screen_num=$((i-1))
+    
+    if [[ "${wallpapers[$i]}" != "$main_wallpaper" ]]; then
+      echo "Screen $screen_num has a different wallpaper than screen 0."
+      
+      # Use the exact same wallpaper as screen 0
+      echo "Setting screen $screen_num to match screen 0 with: $main_wallpaper"
+      
+      wallpaper set "$main_wallpaper" --screen $screen_num
+      if [ $? -eq 0 ]; then
+        echo "Screen $screen_num synchronized successfully!"
+        any_synced=true
+      else
+        echo "Failed to synchronize screen $screen_num."
+      fi
+    else
+      echo "Screen $screen_num already matches screen 0 with the same wallpaper."
+    fi
+  done
+  
+  if [[ "$any_synced" == false ]]; then
+    echo "All screens already have the same wallpaper."
+  fi
+}
+
 # Parse command line arguments
 screens="all"  # Default value
 random_mode=false
@@ -459,6 +546,7 @@ dynamic_mode=false
 override_time=false
 list_screens_mode=false
 name_screen_mode=false
+sync_screens_mode=false
 screen_id=""
 screen_name=""
 
@@ -502,6 +590,10 @@ while [ "$#" -gt 0 ]; do
         exit 1
       fi
       ;;
+    --sync-screens)
+      sync_screens_mode=true
+      shift
+      ;;
     --help)
       print_banner
       print_usage
@@ -524,6 +616,9 @@ if [ "$list_screens_mode" = true ]; then
   exit 0
 elif [ "$name_screen_mode" = true ]; then
   name_screen "$screen_id" "$screen_name"
+  exit 0
+elif [ "$sync_screens_mode" = true ]; then
+  sync_screens
   exit 0
 elif [ "$random_mode" = true ]; then
   wallpaper_path=$(get_random_wallpaper "")

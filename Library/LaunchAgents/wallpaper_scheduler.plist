@@ -15,6 +15,7 @@
         <string>/bin/zsh</string>
         <string>/Users/stanislavvarga/.dotfiles/external/wallpaper-ngn/wp-ngn</string>
         <string>--dynamic</string>
+        <string>--sync-screens</string>
     </array>
     
     <key>StartInterval</key>
