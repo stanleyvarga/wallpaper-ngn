@@ -400,22 +400,56 @@ is_current_daytime_wallpaper_set() {
   local current_daytime="$1"
   local wallpaper_output=$(wallpaper get)
   local all_match="true"
+  local all_same="true"
+  local screens_info=""
+  local first_matching_wallpaper=""
   
-  # Use process substitution to read the output line by line
-  while IFS= read -r wallpaper_path; do
+  # Create an array to store wallpaper paths
+  local -a wallpaper_paths
+  
+  # Parse the wallpaper get output - simply store each line that has a path
+  while IFS= read -r line; do
     # Skip empty lines
-    if [[ -z "$wallpaper_path" ]]; then
+    if [[ -z "$line" ]]; then
       continue
     fi
     
-    # Check if the path contains the current daytime as a directory name
-    if [[ "$wallpaper_path" != *"/$current_daytime/"* ]]; then
-      all_match="false"
-      break
+    # If line contains a path (contains a slash), it's a wallpaper path
+    if [[ "$line" == */* ]]; then
+      # Store the wallpaper path
+      wallpaper_paths+=("$line")
+      
+      # Check if the path contains the current daytime as a directory name
+      if [[ "$line" != *"/$current_daytime/"* ]]; then
+        all_match="false"
+      else
+        # Store the first matching wallpaper we find
+        if [[ -z "$first_matching_wallpaper" ]]; then
+          first_matching_wallpaper="$line"
+        fi
+      fi
     fi
   done < <(echo "$wallpaper_output")
   
-  echo "$all_match"
+  # Check if we have multiple wallpapers
+  if [[ ${#wallpaper_paths[@]} -gt 1 ]]; then
+    # Compare all wallpapers to the first one to see if they're different
+    local first_path="${wallpaper_paths[0]}"
+    for ((i=1; i<${#wallpaper_paths[@]}; i++)); do
+      if [[ "${wallpaper_paths[$i]}" != "$first_path" ]]; then
+        all_same="false"
+        break
+      fi
+    done
+  fi
+  
+  # Format screen info
+  for ((i=0; i<${#wallpaper_paths[@]}; i++)); do
+    screens_info="${screens_info}${i}:${wallpaper_paths[$i]};"
+  done
+  
+  # Return a JSON-like string with all the information
+  echo "{\"all_match\":\"$all_match\",\"all_same\":\"$all_same\",\"screens_info\":\"$screens_info\",\"first_matching_wallpaper\":\"$first_matching_wallpaper\"}"
 }
 
 # Parse command line arguments
@@ -512,23 +546,51 @@ elif [ "$dynamic_mode" = true ]; then
   
   # Check if wallpaper for current daytime is already set
   if [[ "$override_time" = false ]]; then
-    current_wallpaper_check=$(is_current_daytime_wallpaper_set "$current_daytime")
-    if [[ "$current_wallpaper_check" == "true" ]]; then
-      echo "Wallpaper for $current_daytime already set. Use --override to force change."
+    current_wallpaper_info=$(is_current_daytime_wallpaper_set "$current_daytime")
+    
+    # Extract values from the returned JSON-like string
+    all_match=$(echo "$current_wallpaper_info" | sed -n 's/.*"all_match":"\([^"]*\)".*/\1/p')
+    all_same=$(echo "$current_wallpaper_info" | sed -n 's/.*"all_same":"\([^"]*\)".*/\1/p')
+    first_matching_wallpaper=$(echo "$current_wallpaper_info" | sed -n 's/.*"first_matching_wallpaper":"\([^"]*\)".*/\1/p')
+    
+    if [[ "$all_match" == "true" && "$all_same" == "true" ]]; then
+      echo "Wallpaper for $current_daytime already set on all screens. Use --override to force change."
+      exit 0
+    elif [[ "$all_match" == "true" && "$all_same" == "false" ]]; then
+      echo "Screens have different $current_daytime wallpapers."
+      echo "Synchronizing all screens to use the same wallpaper..."
+      
+      # Use the first matching wallpaper as the reference
+      if [[ -n "$first_matching_wallpaper" ]]; then
+        wallpaper_path="$first_matching_wallpaper"
+        echo "Using existing wallpaper: $wallpaper_path"
+      else
+        # This shouldn't happen if all_match is true, but as a fallback
+        wallpaper_path=$(get_random_wallpaper "$current_daytime")
+        echo "Using new random $current_daytime wallpaper: $wallpaper_path"
+      fi
+      
+      # Set wallpaper on all screens
+      wallpaper set "$wallpaper_path" --screen all
+      if [ $? -eq 0 ]; then
+        echo "Wallpapers synchronized successfully!"
+      else
+        echo "Failed to synchronize wallpapers. Make sure the 'wallpaper' command is installed."
+        echo "You can install it with: brew install wallpaper"
+      fi
       exit 0
     fi
+    # If all_match is false, we continue to set a new wallpaper
   fi
   
   # Get wallpaper from the appropriate subfolder
   wallpaper_path=$(get_random_wallpaper "$current_daytime")
   echo "Setting $current_daytime wallpaper: $wallpaper_path"
   
-  # Translate screen name to ID if needed
-  screens=$(translate_screen_name "$screens")
-  
-  wallpaper set "$wallpaper_path" --screen $screens
+  # Always set the wallpaper to all screens when using dynamic mode
+  wallpaper set "$wallpaper_path" --screen all
   if [ $? -eq 0 ]; then
-    echo "Wallpaper set successfully!"
+    echo "Wallpaper set successfully on all screens!"
   else
     echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
     echo "You can install it with: brew install wallpaper"
