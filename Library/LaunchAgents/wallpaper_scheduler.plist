@@ -4,6 +4,12 @@
 <dict>
     <key>Label</key>
     <string>com.wp-ngn.wallpaper_scheduler</string>
+
+    <key>EnvironmentVariables</key>
+	<dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
+	</dict>
     <key>ProgramArguments</key>
     <array>
         <string>~/bin/wp-ngn.sh</string>
@@ -23,5 +29,7 @@
 
     <key>KeepAlive</key>
 	<true/>
+
+    
 </dict>
 </plist>
