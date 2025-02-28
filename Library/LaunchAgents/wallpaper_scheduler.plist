@@ -15,7 +15,6 @@
         <string>/bin/zsh</string>
         <string>/Users/stanislavvarga/.dotfiles/external/wallpaper-ngn/wp-ngn</string>
         <string>--dynamic</string>
-        <string>--override</string>
     </array>
     
     <key>StartInterval</key>
