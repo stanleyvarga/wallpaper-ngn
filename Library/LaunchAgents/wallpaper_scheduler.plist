@@ -13,7 +13,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/sh</string>
-        <string>wp-ngn.sh</string>
+        <string>/Users/stanislavvarga/.dotfiles/external/wallpaper-ngn/wp-ngn.sh</string>
         <string>--dynamic</string>
         <string>--override</string>
     </array>
