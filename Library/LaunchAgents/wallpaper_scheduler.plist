@@ -12,17 +12,20 @@
 	</dict>
     <key>ProgramArguments</key>
     <array>
-        <string>~/bin/wp-ngn.sh</string>
+        <string>/bin/sh</string>
+        <string>/Users/stanislavvarga/bin/wp-ngn.sh</string>
+        <string>--dynamic</string>
+        <string>--override</string>
     </array>
     
     <key>StartInterval</key>
     <integer>300</integer>
 
     <key>StandardOutPath</key>
-    <string>~/.dotfiles/logs/wallpaper_scheduler.log</string>
+    <string>/Users/stanislavvarga/.dotfiles/logs/wallpaper_scheduler.log</string>
 
     <key>StandardErrorPath</key>
-    <string>~/.dotfiles/logs/wallpaper_scheduler_error.log</string>
+    <string>/Users/stanislavvarga/.dotfiles/logs/wallpaper_scheduler_error.log</string>
 
     <key>RunAtLoad</key>
     <true/>
