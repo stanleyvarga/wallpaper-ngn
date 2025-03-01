@@ -19,10 +19,11 @@
     </array>
     
     <key>StartInterval</key>
-    <integer>5</integer>
+    <integer>10</integer>
 
-    <key>StandardOutPath</key>
-    <string>/Users/stanislavvarga/.dotfiles/logs/wallpaper_scheduler.log</string>
+    <!-- Disable logging for now -->
+    <!-- <key>StandardOutPath</key>
+    <string>/Users/stanislavvarga/.dotfiles/logs/wallpaper_scheduler.log</string> -->
 
     <key>StandardErrorPath</key>
     <string>/Users/stanislavvarga/.dotfiles/logs/wallpaper_scheduler_error.log</string>

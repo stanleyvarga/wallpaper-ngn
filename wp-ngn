@@ -3,15 +3,33 @@
 # wp-ngn - A dead serious command line application.
 # Author: Stanislav Varga but really it was Claude 3.7. He was even so humble that he didn't take credit for it and said it was me. What a guy.
 
+# Function to load environment variables from .env file
+load_env() {
+  # Get the directory where the script is located
+  local script_dir="${0:a:h}"
+  local env_file="${script_dir}/.env"
+  
+  # Check if .env file exists
+  if [[ -f "$env_file" ]]; then
+    echo "Loading configuration from $env_file"
+    # Source the .env file to load variables
+    source "$env_file"
+  else
+    echo "No .env file found at $env_file"
+  fi
+  
+  # Set default values if not defined in .env
+  # Use parameter expansion with default values
+  WALLPAPERS_DIR="${WALLPAPERS_DIR:-$HOME/Wallpapers}"
+  CONFIG_DIR="${CONFIG_DIR:-$HOME/.wallpaper-ngn}"
+  CONFIG_FILE="${CONFIG_FILE:-$CONFIG_DIR/config.json}"
+}
+
+# Load environment variables
+load_env
+
 # Clear the console before any output - try multiple methods for better compatibility
 clear 2>/dev/null || printf "\033c" || echo -e "\033[H\033[J]" || echo -e "\033[2J\033[1;1H"
-
-# Define the wallpapers directory
-WALLPAPERS_DIR="$HOME/Wallpapers"
-
-# Define the config directory and file
-CONFIG_DIR="$HOME/.wallpaper-ngn"
-CONFIG_FILE="$CONFIG_DIR/config.json"
 
 # Function to check if a command is available
 command_exists() {
@@ -36,6 +54,13 @@ print_banner() {
     fi
   fi
   echo ""
+  
+  # Print configuration information
+  echo "Configuration:"
+  echo "  Wallpapers directory: $WALLPAPERS_DIR"
+  echo "  Config directory: $CONFIG_DIR"
+  echo "  Config file: $CONFIG_FILE"
+  echo ""
 }
 
 # Ensure config directory exists
@@ -47,20 +72,6 @@ fi
 if [ ! -f "$CONFIG_FILE" ]; then
   echo '{"screen_names":{}}' > "$CONFIG_FILE"
 fi
-
-# Function to print usage information
-print_usage() {
-  echo "Usage: wp-ngn [OPTIONS]"
-  echo "Options:"
-  echo "  --random                  Set a random wallpaper"
-  echo "  --dynamic                 Set a wallpaper based on the time of day"
-  echo "  --override                Force wallpaper change even if current period wallpaper is already set"
-  echo "  --screens <value>         Specify which screens to set (all, 1, 2, etc.)"
-  echo "  --list-screens            List all available screens"
-  echo "  --name-screen <id> <name> Set a custom name for a screen"
-  echo "  --sync-screens            Make all screens match the wallpaper time period of screen 0"
-  echo "  --help                    Show this help message"
-}
 
 # Function to get the current daytime period based on time and month
 get_current_daytime() {
@@ -539,6 +550,69 @@ sync_screens() {
   fi
 }
 
+# Function to sync all screens with a wallpaper that matches the current time period
+dynamic_sync_screens() {
+  # Get current daytime period
+  local current_daytime=$(get_current_daytime)
+  echo "Current time of day: $current_daytime"
+  
+  # Get current wallpapers for all screens
+  local wallpaper_output=$(wallpaper get)
+  local wallpapers=()
+  local periods=()
+  local i=1  # Start from 1 (zsh arrays are 1-indexed by default)
+  
+  # Parse wallpaper paths and extract time periods
+  while IFS= read -r wallpaper_path; do
+    # Skip empty lines
+    if [[ -z "$wallpaper_path" ]]; then
+      continue
+    fi
+    
+    wallpapers[$i]="$wallpaper_path"
+    periods[$i]=$(extract_daytime_from_path "$wallpaper_path")
+    i=$((i+1))
+  done < <(echo "$wallpaper_output")
+  
+  # Check if any screen has a wallpaper matching the current time period
+  local matching_wallpaper=""
+  for ((i=1; i<=${#wallpapers[@]}; i++)); do
+    if [[ "${periods[$i]}" == "$current_daytime" ]]; then
+      matching_wallpaper="${wallpapers[$i]}"
+      echo "Found a matching $current_daytime wallpaper on screen $((i-1)): $matching_wallpaper"
+      break
+    fi
+  done
+  
+  # If we found a matching wallpaper, use it for all screens
+  if [[ -n "$matching_wallpaper" ]]; then
+    echo "Using existing $current_daytime wallpaper for all screens: $matching_wallpaper"
+    wallpaper set "$matching_wallpaper" --screen all
+    if [ $? -eq 0 ]; then
+      echo "All screens successfully set to the same $current_daytime wallpaper!"
+    else
+      echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
+    fi
+  else
+    # If no matching wallpaper found, get a random one from the current time period folder
+    echo "No wallpaper matching current time period ($current_daytime) found on any screen."
+    echo "Getting a random $current_daytime wallpaper for all screens..."
+    local wallpaper_path=$(get_random_wallpaper "$current_daytime")
+    
+    if [[ -n "$wallpaper_path" ]]; then
+      echo "Setting $current_daytime wallpaper on all screens: $wallpaper_path"
+      wallpaper set "$wallpaper_path" --screen all
+      if [ $? -eq 0 ]; then
+        echo "Wallpaper set successfully on all screens!"
+      else
+        echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
+      fi
+    else
+      echo "Failed to find a suitable $current_daytime wallpaper."
+    fi
+  fi
+}
+
 # Parse command line arguments
 screens="all"  # Default value
 random_mode=false
@@ -616,6 +690,10 @@ if [ "$list_screens_mode" = true ]; then
   exit 0
 elif [ "$name_screen_mode" = true ]; then
   name_screen "$screen_id" "$screen_name"
+  exit 0
+elif [ "$dynamic_mode" = true ] && [ "$sync_screens_mode" = true ]; then
+  # Handle case when both --dynamic and --sync-screens are specified
+  dynamic_sync_screens
   exit 0
 elif [ "$sync_screens_mode" = true ]; then
   sync_screens
