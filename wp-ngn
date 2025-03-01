@@ -517,7 +517,7 @@ sync_screens() {
     return
   fi
   
-  echo "Screen 0 is using wallpaper: $main_wallpaper"
+  echo "Screen 0 is using wallpaper time period: $main_period"
   
   # Check each screen and sync if needed
   local any_synced=false
@@ -527,8 +527,9 @@ sync_screens() {
     # Calculate actual screen number (i-1 is the screen number, since arrays start at 1)
     local screen_num=$((i-1))
     
-    if [[ "${wallpapers[$i]}" != "$main_wallpaper" ]]; then
-      echo "Screen $screen_num has a different wallpaper than screen 0."
+    # Compare time periods instead of exact paths
+    if [[ "${periods[$i]}" != "$main_period" ]]; then
+      echo "Screen $screen_num has a different time period (${periods[$i]}) than screen 0 ($main_period)."
       
       # Use the exact same wallpaper as screen 0
       echo "Setting screen $screen_num to match screen 0 with: $main_wallpaper"
@@ -541,12 +542,12 @@ sync_screens() {
         echo "Failed to synchronize screen $screen_num."
       fi
     else
-      echo "Screen $screen_num already matches screen 0 with the same wallpaper."
+      echo "Screen $screen_num already matches screen 0 with the same time period ($main_period)."
     fi
   done
   
   if [[ "$any_synced" == false ]]; then
-    echo "All screens already have the same wallpaper."
+    echo "All screens already have wallpapers from the same time period."
   fi
 }
 
@@ -576,37 +577,73 @@ dynamic_sync_screens() {
   
   # Check if any screen has a wallpaper matching the current time period
   local matching_wallpaper=""
+  local matching_screen=""
   for ((i=1; i<=${#wallpapers[@]}; i++)); do
     if [[ "${periods[$i]}" == "$current_daytime" ]]; then
       matching_wallpaper="${wallpapers[$i]}"
-      echo "Found a matching $current_daytime wallpaper on screen $((i-1)): $matching_wallpaper"
+      matching_screen=$((i-1))
+      echo "Found a matching $current_daytime wallpaper on screen $matching_screen: $matching_wallpaper"
       break
     fi
   done
   
-  # If we found a matching wallpaper, use it for all screens
+  # If we found a matching wallpaper, use it for screens that need it
   if [[ -n "$matching_wallpaper" ]]; then
-    echo "Using existing $current_daytime wallpaper for all screens: $matching_wallpaper"
-    wallpaper set "$matching_wallpaper" --screen all
-    if [ $? -eq 0 ]; then
-      echo "All screens successfully set to the same $current_daytime wallpaper!"
-    else
-      echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
+    echo "Using existing $current_daytime wallpaper: $matching_wallpaper"
+    
+    # Check each screen and only update those that need it
+    local any_updated=false
+    for ((i=1; i<=${#wallpapers[@]}; i++)); do
+      local screen_num=$((i-1))
+      
+      # Skip the screen that already has the matching wallpaper
+      if [[ $screen_num -eq $matching_screen ]]; then
+        echo "Screen $screen_num already has the correct $current_daytime wallpaper."
+        continue
+      fi
+      
+      # Only update if this screen's wallpaper is from a different period
+      if [[ "${periods[$i]}" != "$current_daytime" ]]; then
+        echo "Screen $screen_num has a different time period (${periods[$i]}). Updating to $current_daytime..."
+        wallpaper set "$matching_wallpaper" --screen $screen_num
+        if [ $? -eq 0 ]; then
+          echo "Screen $screen_num updated successfully!"
+          any_updated=true
+        else
+          echo "Failed to update screen $screen_num."
+        fi
+      else
+        echo "Screen $screen_num already has a $current_daytime wallpaper."
+      fi
+    done
+    
+    if [[ "$any_updated" == false ]]; then
+      echo "All screens already have $current_daytime wallpapers."
     fi
   else
     # If no matching wallpaper found, get a random one from the current time period folder
     echo "No wallpaper matching current time period ($current_daytime) found on any screen."
-    echo "Getting a random $current_daytime wallpaper for all screens..."
+    echo "Getting a random $current_daytime wallpaper..."
     local wallpaper_path=$(get_random_wallpaper "$current_daytime")
     
     if [[ -n "$wallpaper_path" ]]; then
-      echo "Setting $current_daytime wallpaper on all screens: $wallpaper_path"
-      wallpaper set "$wallpaper_path" --screen all
-      if [ $? -eq 0 ]; then
-        echo "Wallpaper set successfully on all screens!"
-      else
-        echo "Failed to set wallpaper. Make sure the 'wallpaper' command is installed."
-      fi
+      # Update each screen individually
+      for ((i=1; i<=${#wallpapers[@]}; i++)); do
+        local screen_num=$((i-1))
+        
+        # Check if this screen already has the correct time period
+        if [[ "${periods[$i]}" == "$current_daytime" ]]; then
+          echo "Screen $screen_num already has a $current_daytime wallpaper. Leaving it unchanged."
+        else
+          echo "Setting $current_daytime wallpaper on screen $screen_num: $wallpaper_path"
+          wallpaper set "$wallpaper_path" --screen $screen_num
+          if [ $? -eq 0 ]; then
+            echo "Wallpaper set successfully on screen $screen_num!"
+          else
+            echo "Failed to set wallpaper on screen $screen_num."
+          fi
+        fi
+      done
     else
       echo "Failed to find a suitable $current_daytime wallpaper."
     fi
