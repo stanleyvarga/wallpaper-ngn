@@ -15,7 +15,10 @@ load_env() {
     # Source the .env file to load variables
     source "$env_file"
   else
-    echo "No .env file found at $env_file"
+    # Only warn about missing .env when DEBUG is enabled
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+      echo "No .env file found at $env_file"
+    fi
   fi
   
   # Set default values if not defined in .env
@@ -61,6 +64,37 @@ print_banner() {
   echo "  Config directory: $CONFIG_DIR"
   echo "  Config file: $CONFIG_FILE"
   echo ""
+}
+
+# Function to print usage/help
+print_usage() {
+  cat <<'EOF'
+Usage: wp-ngn [options]
+
+Options:
+  --help, -h, help         Show this help and exit
+  --random                  Set a random wallpaper
+      --screens <target>    Target screen(s) for --random. One of:
+                            all | main | <number> | <custom-name> (default: all)
+  --dynamic                 Pick wallpaper based on current time of day
+      --override            Force change even if current period already set
+  --list-screens            List available screens with IDs and custom names
+  --name-screen <id> <name> Assign a friendly name to a screen id
+  --sync-screens            Make all screens use the same time period as screen 0
+
+Environment/config (can be set via .env or env vars):
+  WALLPAPERS_DIR   Directory with wallpapers (default: $HOME/Wallpapers)
+  CONFIG_DIR       Config directory (default: $HOME/.wallpaper-ngn)
+  CONFIG_FILE      Config file path (default: $CONFIG_DIR/config.json)
+
+Examples:
+  wp-ngn --random
+  wp-ngn --random --screens main
+  wp-ngn --dynamic
+  wp-ngn --list-screens
+  wp-ngn --name-screen 1 "Left Monitor"
+  wp-ngn --sync-screens
+EOF
 }
 
 # Ensure config directory exists
@@ -661,6 +695,9 @@ sync_screens_mode=false
 screen_id=""
 screen_name=""
 
+# Store the original number of arguments to detect "no params" case later
+original_argc=$#
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --random)
@@ -710,6 +747,11 @@ while [ "$#" -gt 0 ]; do
       print_usage
       exit 0
       ;;
+    -h|help)
+      print_banner
+      print_usage
+      exit 0
+      ;;
     *)
       echo "Error: Unknown option $1"
       print_usage
@@ -717,6 +759,13 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+# If no parameters were provided, show help by default
+if [ "$original_argc" -eq 0 ]; then
+  print_banner
+  print_usage
+  exit 0
+fi
 
 # Print the banner before executing any command
 print_banner
